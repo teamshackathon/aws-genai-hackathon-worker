@@ -3,6 +3,15 @@
 .ruff_cache
 
 
+# Celery関連
+celerybeat-schedule
+celerybeat.pid
+
+
+# 環境変数
+.env
+
+
 # ログ系
 **.log
 
@@ -10,9 +19,13 @@
 seeds/*
 !seeds/default
 
-# 環境変数系
-.env
-response.json
+# Docker
+.dockerignore
 
-# k8s系
-k8s/secrets.yaml
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
