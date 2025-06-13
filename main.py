@@ -1,6 +1,6 @@
 import logging
-from celery_app import app
-from tasks import general, ai_processing, data_processing
+
+from tasks import ai_processing, data_processing, general
 
 # ログ設定
 logging.basicConfig(

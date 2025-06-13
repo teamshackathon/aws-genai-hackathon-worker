@@ -1,8 +1,7 @@
-import time
 import logging
-import json
-from typing import List, Dict, Any
-from celery import current_task
+import time
+from typing import Any, Dict, List
+
 from celery_app import app
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
-import time
 import logging
-from celery import current_task
+import time
+
 from celery_app import app
 
 logger = logging.getLogger(__name__)

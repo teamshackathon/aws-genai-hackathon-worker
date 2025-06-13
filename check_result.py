@@ -1,9 +1,11 @@
 """
 Celeryタスクの結果を確認するスクリプト
 """
-import sys
 import json
+import sys
+
 from celery.result import AsyncResult
+
 from celery_app import app
 
 

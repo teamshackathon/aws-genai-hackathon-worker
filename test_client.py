@@ -1,8 +1,7 @@
 """
 Celeryタスクをテストするためのクライアントスクリプト
 """
-import time
-from tasks import general, ai_processing, data_processing
+from tasks import ai_processing, data_processing, general
 
 
 def test_general_tasks():
@@ -88,14 +87,14 @@ def wait_for_results(results, timeout=30):
         try:
             print(f"\nタスク {i} (ID: {result.id}):")
             task_result = result.get(timeout=timeout)
-            print(f"  状態: 成功")
+            print("  状態: 成功")
             print(f"  結果: {task_result.get('message', 'メッセージなし')}")
             
             if 'result' in task_result:
                 print(f"  詳細: {task_result['result']}")
                 
         except Exception as e:
-            print(f"  状態: エラーまたはタイムアウト")
+            print("  状態: エラーまたはタイムアウト")
             print(f"  詳細: {str(e)}")
 
 
