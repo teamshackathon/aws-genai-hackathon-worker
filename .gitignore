@@ -1,0 +1,31 @@
+# Python系
+**/__pycache__
+.ruff_cache
+
+
+# Celery関連
+celerybeat-schedule
+celerybeat.pid
+
+
+# 環境変数
+.env
+
+
+# ログ系
+**.log
+
+# 初期値系
+seeds/*
+!seeds/default
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
