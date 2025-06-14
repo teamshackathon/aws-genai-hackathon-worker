@@ -41,7 +41,6 @@ services:
     command: celery -A celery_app beat --loglevel=info
     volumes:
       - .:/app
-      - ./celerybeat-schedule:/app/celerybeat-schedule
     restart: unless-stopped
     networks:
       - celery-network
