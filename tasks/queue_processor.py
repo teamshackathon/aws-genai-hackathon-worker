@@ -102,19 +102,64 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         
         # 処理結果
         result = {
-            "status": "completed",
-            "session_id": session_id,
-            "url": url,
-            "user_id": user_id,
-            "processed_at": datetime.utcnow().isoformat(),
-            "message": "レシピ生成タスクが正常に処理されました",
-            "recipe": {
-                "title": "AIが生成したサンプルレシピ",
-                "ingredients": ["材料1", "材料2", "材料3"],
-                "instructions": ["手順1", "手順2", "手順3"],
-                "cooking_time": "30分",
-                "servings": 4
-            }
+            "recipes": {
+                "status_id": 1,
+                "external_service_id": 0,
+                "url": url,
+                "recipe_name": "AIが生成したレシピ",
+            },
+            "user_recipes": {
+                "user_id": user_id,
+            },
+            "processes": [
+                {
+                    "process": "鶏肉を切る。おおきさは一口大。",
+                    "process_number": 1
+                },
+                {
+                    "process": "野菜を切る。にんじん、玉ねぎ、ピーマンなど。",
+                    "process_number": 2
+                },
+                {
+                    "process": "フライパンで鶏肉を焼く。中火で約10分。",
+                    "process_number": 3
+                },
+                {
+                    "process": "野菜を加えてさらに5分炒める。",
+                    "process_number": 4
+                },
+                {
+                    "process": "調味料を加えて全体を混ぜる。",
+                    "process_number": 5
+                },
+            ],
+            "ingredients": [
+                {
+                    "ingredient": "鶏肉",
+                    "amount": "300g",
+                },
+                {
+                    "ingredient": "にんじん",
+                    "amount": "1本",
+                },
+                {
+                    "ingredient": "玉ねぎ",
+                    "amount": "1個",
+                },
+                {
+                    "ingredient": "ピーマン",
+                    "amount": "2個",
+                },
+                {
+                    "ingredient": "塩",
+                    "amount": "小さじ1",
+                },
+                {
+                    "ingredient": "こしょう",
+                    "amount": "少々",
+                }
+            ]
+            
         }
         
         # WebSocket: タスク完了通知
