@@ -29,3 +29,6 @@ seeds/*
 # OS
 .DS_Store
 Thumbs.db
+
+# k8s
+k8s/secrets.yaml

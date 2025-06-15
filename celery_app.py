@@ -4,27 +4,31 @@ from config import settings
 
 # Celeryアプリケーションの初期化
 app = Celery(
-    "aws-genai-hackathon-worker",
-    broker=settings.celery_broker_url,
-    backend=settings.celery_result_backend,
-    include=["tasks.general", "tasks.ai_processing", "tasks.data_processing"]
+    "bae-recipe-worker",
+    broker=settings.CELERY_BROCKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND,
+    include=["tasks.queue_processor"]
 )
 
 # Celery設定
 app.conf.update(
-    task_serializer=settings.celery_task_serializer,
-    accept_content=settings.celery_accept_content,
-    result_serializer=settings.celery_result_serializer,
-    timezone=settings.celery_timezone,
-    enable_utc=settings.celery_enable_utc,
-    result_expires=settings.celery_result_expires,
-    task_routes={
-        "tasks.ai_processing.*": {"queue": "ai_queue"},
-        "tasks.data_processing.*": {"queue": "data_queue"},
-        "tasks.general.*": {"queue": "general_queue"},
+    task_serializer=settings.CELERY_TASK_SERIALIZER,
+    accept_content=settings.CELERY_ACCEPT_CONTENT,
+    result_serializer=settings.CELERY_RESULT_SERIALIZER,
+    timezone=settings.CELERY_TIMEZONE,
+    enable_utc=settings.CELERY_ENABLE_UTC,
+    result_expires=settings.CELERY_RESULT_EXPIRES,      task_routes={
+        "tasks.queue_processor.*": {"queue": "recipe_gen_queue"},
     },
     worker_prefetch_multiplier=1,
     task_acks_late=True,
+    # Beat スケジュール設定 - FastAPIからのキュー確認用
+    beat_schedule={
+        'scan-recipe-tasks': {
+            'task': 'tasks.queue_processor.scan_recipe_tasks',
+            'schedule': 60.0,  # 30秒ごとにFastAPIからのタスクがあるかスキャン
+        },
+    },
 )
 
 # Celeryアプリケーションを自動検出
