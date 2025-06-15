@@ -8,7 +8,12 @@ services:
       - REDIS_URL=redis://host.docker.internal:6379/0
       - CELERY_BROKER_URL=redis://host.docker.internal:6379/0
       - CELERY_RESULT_BACKEND=redis://host.docker.internal:6379/0
-    command: celery -A celery_app worker --loglevel=info --queues=recipe_gen_queue --concurrency=4
+    command: >
+      sh -c "
+        pip install -r requirements.dev.txt &&
+        watchmedo auto-restart --directory=/app --pattern='*.py' --recursive -- 
+        celery -A celery_app worker --loglevel=info --queues=recipe_gen_queue --concurrency=2
+      "
     volumes:
       - .:/app
     restart: unless-stopped

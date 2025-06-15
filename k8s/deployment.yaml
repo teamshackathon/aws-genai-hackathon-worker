@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: celery-worker
-        image: aws-genai-hackathon-worker:latest
+        image: ghcr.io/teamshackathon/prod/aws-genai-worker:latest
         imagePullPolicy: Always
         command: ["celery", "-A", "celery_app", "worker", "--loglevel=info", "--queues=recipe_gen_queue", "--concurrency=4"]
         env:
@@ -45,28 +45,6 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
-        livenessProbe:
-          exec:
-            command:
-            - celery
-            - -A
-            - celery_app
-            - inspect
-            - ping
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          timeoutSeconds: 10
-        readinessProbe:
-          exec:
-            command:
-            - celery
-            - -A
-            - celery_app
-            - inspect
-            - active
-          initialDelaySeconds: 15
-          periodSeconds: 10
-          timeoutSeconds: 5
 ---
 # Celery Beat Deployment
 apiVersion: apps/v1
@@ -90,7 +68,7 @@ spec:
     spec:
       containers:
       - name: celery-beat
-        image: aws-genai-hackathon-worker:latest
+        image: ghcr.io/teamshackathon/prod/aws-genai-worker:latest
         imagePullPolicy: Always
         command: ["celery", "-A", "celery_app", "beat", "--loglevel=info"]
         env:
@@ -119,15 +97,6 @@ spec:
         volumeMounts:
         - name: beat-schedule
           mountPath: /app/data
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "ps aux | grep '[c]elery.*beat' || exit 1"
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          timeoutSeconds: 10
       volumes:
       - name: beat-schedule
         emptyDir: {}
@@ -154,7 +123,7 @@ spec:
     spec:
       containers:
       - name: celery-flower
-        image: aws-genai-hackathon-worker:latest
+        image: ghcr.io/teamshackathon/prod/aws-genai-worker:latest
         imagePullPolicy: Always
         command: ["celery", "-A", "celery_app", "flower", "--port=5555"]
         args:
@@ -195,17 +164,3 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 5555
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          timeoutSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 5555
-          initialDelaySeconds: 15
-          periodSeconds: 10
-          timeoutSeconds: 5

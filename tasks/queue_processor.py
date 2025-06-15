@@ -43,7 +43,7 @@ class SimpleQueueProcessor:
 
 
 @app.task(bind=True, name='tasks.queue_processor.process_recipe_generation_task')
-async def process_recipe_generation_task(self, session_id: str, url: str, user_id: int, metadata: Dict = None):
+def process_recipe_generation_task(self, session_id: str, url: str, user_id: int, metadata: Dict = None):
     """FastAPIから呼び出されるレシピ生成タスク - argsでsession_id, url, user_id、kwargsでmetadataを受け取る"""
     try:
         print("\n=== Recipe Generation Task ===")
