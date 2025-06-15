@@ -40,7 +40,7 @@
         {
             "label": "コードのフォーマット",
             "type": "shell",
-            "command": "docker compose exec api ruff check ./ --fix",
+            "command": "docker compose exec worker ruff check ./ --fix",
             "args": [],
             "problemMatcher": [],
         }
