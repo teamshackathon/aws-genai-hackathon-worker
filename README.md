@@ -7,6 +7,7 @@
 - **基本タスク処理**: 数値計算、テキスト処理
 - **AI処理**: 感情分析、テキスト要約
 - **データ処理**: CSVデータ処理、バッチ処理、データ集計
+- **Redis Queue処理**: レシピ生成タスクの非同期処理
 - **優先度キュー**: high_priority, normal, low_priority
 - **監視**: Flower UI でタスクの監視が可能
 
@@ -61,6 +62,38 @@ print(f"Sentiment Task ID: {sentiment_result.id}")
 data = [{"name": "Alice", "age": "25"}]
 data_result = process_csv_data.delay(data)
 print(f"Data Task ID: {data_result.id}")
+```
+
+### Redis Queueを使用したレシピ生成タスク
+
+```bash
+# テスト用のレシピ生成タスクをキューに追加
+python test_queue.py
+
+# Redis queueワーカーを開始（キューからタスクを取得・処理）
+python queue_worker.py
+```
+
+```python
+# プログラムからレシピ生成タスクを利用
+from tasks.queue_processor import QueueProcessor
+
+processor = QueueProcessor()
+
+# タスクをキューに追加（例：別のアプリケーションから）
+task_data = {
+    "task_id": "recipe_gen_test_123",
+    "session_id": "session_456",
+    "url": "https://example.com/recipe",
+    "user_id": 789,
+    "priority": 1,
+    "created_at": "2025-06-15T10:00:00Z",
+    "status": "queued"
+}
+
+# タスクステータスの確認
+status = processor.get_task_status("recipe_gen_test_123")
+print(f"Task Status: {status}")
 ```
 
 ### タスク結果の確認
