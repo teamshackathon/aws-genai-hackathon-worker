@@ -1,7 +1,9 @@
 """
 Redis の task:recipe_gen_* キーを監視してシンプルにprintする処理
+WebSocket通信でリアルタイム進捗を送信
 """
 import logging
+import time
 from datetime import datetime
 from typing import Dict, List
 
@@ -9,6 +11,7 @@ import redis
 
 from celery_app import app
 from config import settings
+from utils.websocket_client import send_task_completed_sync, send_task_failed_sync, send_task_progress_sync, send_task_started_sync
 
 logger = logging.getLogger(__name__)
 
@@ -43,16 +46,27 @@ class SimpleQueueProcessor:
 
 
 @app.task(bind=True, name='tasks.queue_processor.process_recipe_generation_task')
-async def process_recipe_generation_task(self, session_id: str, url: str, user_id: int, metadata: Dict = None):
-    """FastAPIから呼び出されるレシピ生成タスク - argsでsession_id, url, user_id、kwargsでmetadataを受け取る"""
+def process_recipe_generation_task(self, session_id: str, url: str, user_id: int, metadata: Dict = None):
+    """FastAPIから呼び出されるレシピ生成タスク - WebSocket通信でリアルタイム進捗を送信"""
+    ws_url = settings.WEBSOCKET_URL + f"?session_id={session_id}"
+    
     try:
-        print("\n=== Recipe Generation Task ===")
-        print(f"Celery Task ID: {self.request.id}")
+        print("\n=== Recipe Generation Task Started ===")
         print(f"Session ID: {session_id}")
         print(f"URL: {url}")
         print(f"User ID: {user_id}")
         print(f"Queue: {self.request.delivery_info.get('routing_key', 'unknown')}")
         print(f"Started at: {datetime.utcnow().isoformat()}")
+        
+        # WebSocket: タスク開始通知
+        task_start_data = {
+            "url": url,
+            "user_id": user_id,
+            "queue": self.request.delivery_info.get('routing_key', 'unknown')
+        }
+        
+        ws_sent = send_task_started_sync(ws_url, session_id, task_start_data)
+        print(f"WebSocket task started notification sent: {ws_sent}")
         
         # メタデータがある場合は表示
         if metadata:
@@ -61,7 +75,30 @@ async def process_recipe_generation_task(self, session_id: str, url: str, user_i
             print(f"Created at: {metadata.get('created_at', 'N/A')}")
             print(f"Status: {metadata.get('status', 'N/A')}")
         
-
+        # ここでレシピ生成の実処理をシミュレート（段階的に進捗を送信）
+        
+        # Step 1: URL解析開始 (20%)
+        print("Step 1: URL解析開始...")
+        progress_data = {"step": "url_analysis", "url": url, "context": "URL解析中"}
+        send_task_progress_sync(ws_url, session_id, 20.0, "URL解析中...", progress_data)
+        time.sleep(5)  # 処理時間をシミュレート
+        
+        # Step 2: コンテンツ取得 (40%)
+        print("Step 2: コンテンツ取得中...")
+        progress_data = {"step": "content_fetch", "status": "fetching", "content": "取得中のコンテンツ情報"}
+        send_task_progress_sync(ws_url, session_id, 40.0, "コンテンツを取得中...", progress_data)
+        time.sleep(5)
+        
+        # Step 3: AI解析処理 (70%)
+        print("Step 3: AI解析処理中...")
+        progress_data = {"step": "ai_analysis", "status": "processing", "content": "AI解析中のコンテンツ情報"}
+        send_task_progress_sync(ws_url, session_id, 70.0, "AIでレシピを生成中...", progress_data)
+        time.sleep(5)
+        
+        # Step 4: レシピ生成完了 (100%)
+        print("Step 4: レシピ生成完了")
+        progress_data = {"step": "recipe_generation", "status": "completed", "content": "生成されたレシピ情報を整理中"}
+        send_task_progress_sync(ws_url, session_id, 100.0, "レシピ生成完了！", progress_data)
         
         # 処理結果
         result = {
@@ -69,10 +106,24 @@ async def process_recipe_generation_task(self, session_id: str, url: str, user_i
             "session_id": session_id,
             "url": url,
             "user_id": user_id,
-            "celery_task_id": self.request.id,
             "processed_at": datetime.utcnow().isoformat(),
-            "message": "レシピ生成タスクが正常に処理されました"
+            "message": "レシピ生成タスクが正常に処理されました",
+            "recipe": {
+                "title": "AIが生成したサンプルレシピ",
+                "ingredients": ["材料1", "材料2", "材料3"],
+                "instructions": ["手順1", "手順2", "手順3"],
+                "cooking_time": "30分",
+                "servings": 4
+            }
         }
+        
+        # WebSocket: タスク完了通知
+        completion_data = {
+            "processing_time_seconds": 5,  # シミュレート処理時間
+            "steps_completed": 4,
+            "content": "レシピ生成が完了しました",
+        }
+        send_task_completed_sync(ws_url, session_id, result, completion_data)
         
         print(f"Result: {result}")
         print("=" * 50)
@@ -82,6 +133,14 @@ async def process_recipe_generation_task(self, session_id: str, url: str, user_i
     except Exception as e:
         logger.error(f"Recipe generation task error: {str(e)}")
         print(f"処理エラー: {str(e)}")
+        
+        # WebSocket: タスク失敗通知
+        error_data = {
+            "error_type": type(e).__name__,
+            "failed_at": datetime.utcnow().isoformat()
+        }
+        send_task_failed_sync(ws_url, session_id, str(e), error_data)
+        
         raise
 
 
