@@ -38,6 +38,11 @@ spec:
             secretKeyRef:
               name: celery-secrets
               key: CELERY_RESULT_BACKEND
+        - name: WEBSOCKET_URL
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: WEBSOCKET_URL
         resources:
           requests:
             memory: "256Mi"
@@ -87,6 +92,11 @@ spec:
             secretKeyRef:
               name: celery-secrets
               key: CELERY_RESULT_BACKEND
+        - name: WEBSOCKET_URL
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: WEBSOCKET_URL
         resources:
           requests:
             memory: "128Mi"
