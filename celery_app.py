@@ -26,7 +26,7 @@ app.conf.update(
     beat_schedule={
         'scan-recipe-tasks': {
             'task': 'tasks.queue_processor.scan_recipe_tasks',
-            'schedule': 60.0,  # 30秒ごとにFastAPIからのタスクがあるかスキャン
+            'schedule': 300.0,  # 300秒ごとにFastAPIからのタスクがあるかスキャン
         },
     },
 )
