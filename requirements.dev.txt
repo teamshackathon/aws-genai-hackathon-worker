@@ -4,3 +4,7 @@ pytest-cov
 black
 ruff
 watchdog
+google
+google-generativeai
+google-genai
+python-dotenv

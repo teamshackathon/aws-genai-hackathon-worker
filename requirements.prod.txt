@@ -5,3 +5,7 @@ pydantic-settings
 flower
 websockets
 httpx
+google
+google-generativeai
+google-genai
+python-dotenv

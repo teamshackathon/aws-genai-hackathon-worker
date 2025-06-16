@@ -97,6 +97,11 @@ spec:
             secretKeyRef:
               name: celery-secrets
               key: WEBSOCKET_URL
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: GOOGLE_API_KEY
         resources:
           requests:
             memory: "128Mi"
