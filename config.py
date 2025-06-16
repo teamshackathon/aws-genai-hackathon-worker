@@ -1,7 +1,9 @@
 import os
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
+load_dotenv()
 
 class Settings(BaseSettings):
     # Redis設定
@@ -22,5 +24,8 @@ class Settings(BaseSettings):
 
     # Beat schedule設定（Celery beatのスケジュールファイルのパス）
     BEAT_SCHEDULE_FILENAME: str = "/app/data/celerybeat-schedule"
+
+    # LLM
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
 
 settings = Settings()

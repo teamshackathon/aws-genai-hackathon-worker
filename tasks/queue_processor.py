@@ -3,7 +3,6 @@ Redis の task:recipe_gen_* キーを監視してシンプルにprintする処�
 WebSocket通信でリアルタイム進捗を送信
 """
 import logging
-import time
 from datetime import datetime
 from typing import Dict, List
 
@@ -11,6 +10,8 @@ import redis
 
 from celery_app import app
 from config import settings
+from llm.gemini import GeminiService
+from utils.llm import transform_recipe_data
 from utils.websocket_client import send_task_completed_sync, send_task_failed_sync, send_task_progress_sync, send_task_started_sync
 
 logger = logging.getLogger(__name__)
@@ -77,90 +78,18 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         
         # ここでレシピ生成の実処理をシミュレート（段階的に進捗を送信）
         
-        # Step 1: URL解析開始 (20%)
-        print("Step 1: URL解析開始...")
-        progress_data = {"step": "url_analysis", "url": url, "context": "URL解析中"}
-        send_task_progress_sync(ws_url, session_id, 20.0, "URL解析中...", progress_data)
-        time.sleep(5)  # 処理時間をシミュレート
+        # Step 1: レシピ生成開始
+        print("Step 1: レシピ生成開始")
+        gemini_service = GeminiService()
+        result = gemini_service.generate_content(url)
         
-        # Step 2: コンテンツ取得 (40%)
-        print("Step 2: コンテンツ取得中...")
-        progress_data = {"step": "content_fetch", "status": "fetching", "content": "取得中のコンテンツ情報"}
-        send_task_progress_sync(ws_url, session_id, 40.0, "コンテンツを取得中...", progress_data)
-        time.sleep(5)
-        
-        # Step 3: AI解析処理 (70%)
-        print("Step 3: AI解析処理中...")
-        progress_data = {"step": "ai_analysis", "status": "processing", "content": "AI解析中のコンテンツ情報"}
-        send_task_progress_sync(ws_url, session_id, 70.0, "AIでレシピを生成中...", progress_data)
-        time.sleep(5)
-        
-        # Step 4: レシピ生成完了 (100%)
-        print("Step 4: レシピ生成完了")
+        transform_result = transform_recipe_data(result, url, user_id)
+
+        # Step 2: レシピ生成完了
+        print("Step 2: レシピ生成完了")
         progress_data = {"step": "recipe_generation", "status": "completed", "content": "生成されたレシピ情報を整理中"}
         send_task_progress_sync(ws_url, session_id, 100.0, "レシピ生成完了！", progress_data)
         
-        # 処理結果
-        result = {
-            "recipes": {
-                "status_id": 1,
-                "external_service_id": 0,
-                "url": url,
-                "recipe_name": "AIが生成したレシピ",
-            },
-            "user_recipes": {
-                "user_id": user_id,
-            },
-            "processes": [
-                {
-                    "process": "鶏肉を切る。おおきさは一口大。",
-                    "process_number": 1
-                },
-                {
-                    "process": "野菜を切る。にんじん、玉ねぎ、ピーマンなど。",
-                    "process_number": 2
-                },
-                {
-                    "process": "フライパンで鶏肉を焼く。中火で約10分。",
-                    "process_number": 3
-                },
-                {
-                    "process": "野菜を加えてさらに5分炒める。",
-                    "process_number": 4
-                },
-                {
-                    "process": "調味料を加えて全体を混ぜる。",
-                    "process_number": 5
-                },
-            ],
-            "ingredients": [
-                {
-                    "ingredient": "鶏肉",
-                    "amount": "300g",
-                },
-                {
-                    "ingredient": "にんじん",
-                    "amount": "1本",
-                },
-                {
-                    "ingredient": "玉ねぎ",
-                    "amount": "1個",
-                },
-                {
-                    "ingredient": "ピーマン",
-                    "amount": "2個",
-                },
-                {
-                    "ingredient": "塩",
-                    "amount": "小さじ1",
-                },
-                {
-                    "ingredient": "こしょう",
-                    "amount": "少々",
-                }
-            ]
-            
-        }
         
         # WebSocket: タスク完了通知
         completion_data = {
@@ -168,12 +97,12 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
             "steps_completed": 4,
             "content": "レシピ生成が完了しました",
         }
-        send_task_completed_sync(ws_url, session_id, result, completion_data)
+        send_task_completed_sync(ws_url, session_id, transform_result, completion_data)
         
-        print(f"Result: {result}")
+        print(f"Result: {transform_result}")
         print("=" * 50)
         
-        return result
+        return transform_result
         
     except Exception as e:
         logger.error(f"Recipe generation task error: {str(e)}")
