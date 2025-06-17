@@ -10,6 +10,7 @@ import redis
 
 from celery_app import app
 from config import settings
+from llm.bedrock import BedrockService
 from llm.gemini import GeminiService
 from utils.llm import transform_recipe_data
 from utils.websocket_client import send_task_completed_sync, send_task_failed_sync, send_task_progress_sync, send_task_started_sync
@@ -64,7 +65,9 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
             "url": url,
             "user_id": user_id,
             "content": "URLを受け取り、レシピ生成を開始します",
-            "queue": self.request.delivery_info.get('routing_key', 'unknown')
+            "progress": 0,
+            "queue": self.request.delivery_info.get('routing_key', 'unknown'),
+            "type": 1  # タスク開始
         }
         
         ws_sent = send_task_started_sync(ws_url, session_id, task_start_data)
@@ -82,29 +85,81 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         # Step 1: レシピ生成開始
         print("Step 1: レシピ生成開始")
         gemini_service = GeminiService()
+        bedrock_service = BedrockService()
         result = gemini_service.generate_content(url)
-        
-        transform_result = transform_recipe_data(result, url, user_id)
 
         # Step 2: レシピ生成完了
-        print("Step 2: レシピ生成完了")
-        data = {"content": "生成されたレシピ情報を整理中..."}
+        print("Step 2: レシピ生成開始")
+        data = {
+            "content": "生成されたレシピ情報を生成中...",
+            "progress": 25,
+            "type": 2,  # タスク進捗
+        }
         send_task_progress_sync(ws_url, session_id, data)
+
+        # Step 3: 親しみやすい表現に変換
+        print("Step 3: 親しみやすい表現に変換")
+        result = bedrock_service.rewrite_recipe(result)
+        data = {
+            "content": "レシピ情報を親しみやすい表現に変換中...",
+            "progress": 50,
+            "type": 3
+        }
+        send_task_progress_sync(ws_url, session_id, data)
+
+        # Step 4: ジャンル分類
+        print("Step 4: ジャンル分類")
+        genrue = bedrock_service.generate_genre(result)
+        data = {
+            "content": "レシピのジャンルを分類中...",
+            "progress": 75,
+            "genre": genrue,
+            "type": 4
+        }
+
+        send_task_progress_sync(ws_url, session_id, data)
+
+        # Step 5: レシピ名生成
+        print("Step 5: レシピ名生成")
+        recipe_name = bedrock_service.generate_recipe_name(result)
+        data = {
+            "content": "レシピ名を生成中...",
+            "progress": 90,
+            "recipe_name": recipe_name,
+            "type": 5
+        }
+
+        send_task_progress_sync(ws_url, session_id, data)
+        # Step 6: キーワード生成
+        print("Step 6: キーワード生成")
+        keywords = bedrock_service.generate_keywords(result)
+        data = {
+            "content": "レシピのキーワードを生成中...",
+            "progress": 95,
+            "keywords": keywords,
+            "type": 6
+        }
+
+        send_task_progress_sync(ws_url, session_id, data)
+
+        transform_result = transform_recipe_data(result, url, user_id)
         
         
         # WebSocket: タスク完了通知
         data = {
-            "processing_time_seconds": 5,  # シミュレート処理時間
-            "steps_completed": 4,
-            "content": "レシピ生成が完了しました",
+            "content": "レシピ生成が完了までもう少しです。",
             "result": transform_result,
+            "genrue": genrue.get('genre', ''),
+            "keywords": keywords.get('keywords', ''),
+            "recipe_name": recipe_name.get('recipes', {}).get('recipe_name', 'AIが生成したレシピ'),
+            "progress": 99,
         }
         send_task_completed_sync(ws_url, session_id, data)
         
         print(f"Result: {transform_result}")
         print("=" * 50)
         
-        return transform_result
+        return data
         
     except Exception as e:
         logger.error(f"Recipe generation task error: {str(e)}")

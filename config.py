@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
@@ -27,5 +28,9 @@ class Settings(BaseSettings):
 
     # LLM
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+
+    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_REGION_NAME: Optional[str] = os.getenv("AWS_REGION_NAME", "ap-northeast-1")
 
 settings = Settings()

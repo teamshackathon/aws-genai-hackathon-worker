@@ -59,14 +59,15 @@ class GeminiService:
         if not file_url:
             raise ValueError("Prompt and file URL must not be empty.")
         
-        youtube_shorts_pattern = r'^https://(www\.)?youtube\.com/shorts/[a-zA-Z0-9_-]+$'
+        youtube_shorts_pattern = r'^https://(www\.)?youtube\.com/shorts/[a-zA-Z0-9_-]+(\?.*)?$'
 
         if not re.match(youtube_shorts_pattern, file_url):
             raise ValueError(f"File URL must be a valid YouTube Shorts URL.: {file_url}")
         
         prompt = f'''あなたは料理動画を分析して、構造化されたJSONデータを出力するとても優秀なAIです。
 
-次の動画の内容を分析して、以下の**スキーマに準拠した形式**でレシピ情報を抽出してください。
+次の動画の内容を分析して、一人分の料理として以下の**スキーマに準拠した形式**でレシピ情報を抽出してください。
+料理工程はできるだけ詳細に記述してください。
 
 **何があっても、以下のスキーマの形のみ出力するように絶対従ってください。**
 
@@ -77,6 +78,8 @@ class GeminiService:
         response = self.client.invoke(prompt, file_url)
 
         response = self.replaced2json(response)
+
+        print(f"Response: {response}")
 
         if not response:
             raise ValueError("Response is empty or invalid JSON format.")
