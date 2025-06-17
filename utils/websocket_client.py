@@ -132,22 +132,22 @@ def send_task_started_sync(ws_url: str, session_id: str, data: Optional[dict] = 
     return client.send_message_sync(message)
 
 
-def send_task_progress_sync(ws_url: str, session_id: str, progress: float, message_text: str = "", data: Optional[dict] = None) -> bool:
+def send_task_progress_sync(ws_url: str, session_id: str, data: Optional[dict] = None) -> bool:
     """Synchronous wrapper for sending task progress notification"""
     client = WebSocketClient(ws_url)
-    message = WebSocketMessage.task_progress(session_id, progress, message_text, data)
+    message = WebSocketMessage.task_progress(session_id, data)
     return client.send_message_sync(message)
 
 
-def send_task_completed_sync(ws_url: str, session_id: str, result, data: Optional[dict] = None) -> bool:
+def send_task_completed_sync(ws_url: str, session_id: str, data: Optional[dict] = None) -> bool:
     """Synchronous wrapper for sending task completed notification"""
     client = WebSocketClient(ws_url)
-    message = WebSocketMessage.task_completed(session_id, result, data)
+    message = WebSocketMessage.task_completed(session_id, data)
     return client.send_message_sync(message)
 
 
-def send_task_failed_sync(ws_url: str, session_id: str, error: str, data: Optional[dict] = None) -> bool:
+def send_task_failed_sync(ws_url: str, session_id: str, data: Optional[dict] = None) -> bool:
     """Synchronous wrapper for sending task failed notification"""
     client = WebSocketClient(ws_url)
-    message = WebSocketMessage.task_failed(session_id, error, data)
+    message = WebSocketMessage.task_failed(session_id, data)
     return client.send_message_sync(message)

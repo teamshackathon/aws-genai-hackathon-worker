@@ -63,6 +63,7 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         task_start_data = {
             "url": url,
             "user_id": user_id,
+            "content": "URLを受け取り、レシピ生成を開始します",
             "queue": self.request.delivery_info.get('routing_key', 'unknown')
         }
         
@@ -87,17 +88,18 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
 
         # Step 2: レシピ生成完了
         print("Step 2: レシピ生成完了")
-        progress_data = {"step": "recipe_generation", "status": "completed", "content": "生成されたレシピ情報を整理中"}
-        send_task_progress_sync(ws_url, session_id, 100.0, "レシピ生成完了！", progress_data)
+        data = {"content": "生成されたレシピ情報を整理中..."}
+        send_task_progress_sync(ws_url, session_id, data)
         
         
         # WebSocket: タスク完了通知
-        completion_data = {
+        data = {
             "processing_time_seconds": 5,  # シミュレート処理時間
             "steps_completed": 4,
             "content": "レシピ生成が完了しました",
+            "result": transform_result,
         }
-        send_task_completed_sync(ws_url, session_id, transform_result, completion_data)
+        send_task_completed_sync(ws_url, session_id, data)
         
         print(f"Result: {transform_result}")
         print("=" * 50)
@@ -111,9 +113,10 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         # WebSocket: タスク失敗通知
         error_data = {
             "error_type": type(e).__name__,
-            "failed_at": datetime.utcnow().isoformat()
+            "failed_at": datetime.utcnow().isoformat(),
+            "content": "レシピ生成中にエラーが発生しました",
         }
-        send_task_failed_sync(ws_url, session_id, str(e), error_data)
+        send_task_failed_sync(ws_url, session_id, error_data)
         
         raise
 
