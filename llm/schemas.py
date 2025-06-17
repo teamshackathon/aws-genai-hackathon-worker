@@ -49,3 +49,42 @@ RECIPE_SCHEMAS = """{
         }
     }
 }"""
+
+GENRE_SCHEMAS = """{
+    "type": "object",
+    "required": ["genre"],
+    "properties": {
+        "genre": {
+            "type": "string",
+            "enum": ["和食", "洋食", "中華", "韓国風", "エスニック", "スイーツ", "その他"],
+            "description": "The genre of the recipe."
+        }
+    }
+}"""
+
+RECIPENAME_SCHEMAS = """{
+    "type": "object",
+    "required": ["recipe_name"],
+    "properties": {
+        "recipe_name": {
+            "type": "string",
+            "description": "The title of the recipe."
+        }
+    }
+}"""
+
+KEYWORD_SCHEMAS = """{
+    "type": "object",
+    "required": ["keywords"],
+    "properties": {
+        "keywords": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "items": {
+                "type": "string"
+            },
+            "description": "A list of keywords related to the recipe."
+        }
+    }
+}"""

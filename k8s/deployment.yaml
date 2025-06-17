@@ -48,6 +48,21 @@ spec:
             secretKeyRef:
               name: celery-secrets
               key: GOOGLE_API_KEY
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: AWS_SECRET_ACCESS_KEY
+        - name: AWS_REGION_NAME
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: AWS_REGION_NAME
         resources:
           requests:
             memory: "256Mi"
@@ -107,6 +122,21 @@ spec:
             secretKeyRef:
               name: celery-secrets
               key: GOOGLE_API_KEY
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: AWS_SECRET_ACCESS_KEY
+        - name: AWS_REGION_NAME
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: AWS_REGION_NAME
         resources:
           requests:
             memory: "128Mi"

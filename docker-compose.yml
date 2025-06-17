@@ -44,7 +44,11 @@ services:
       - CELERY_BROKER_URL=redis://host.docker.internal:6379/0
       - CELERY_RESULT_BACKEND=redis://host.docker.internal:6379/0
       - WEBSOCKET_URL=ws://host.docker.internal:8000/api/v1/ws/recipe-gen/celery
-    command: celery -A celery_app beat --loglevel=info
+    command: >
+      sh -c "
+        pip install -r requirements.dev.txt &&
+        celery -A celery_app beat --loglevel=info
+      "
     volumes:
       - .:/app
     restart: unless-stopped

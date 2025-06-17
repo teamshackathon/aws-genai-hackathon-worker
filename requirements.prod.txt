@@ -9,3 +9,7 @@ google
 google-generativeai
 google-genai
 python-dotenv
+langchain_aws
+langchain_core
+langchain_community
+langchain
