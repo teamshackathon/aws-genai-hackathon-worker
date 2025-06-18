@@ -10,7 +10,7 @@ import redis
 
 from celery_app import app
 from config import settings
-from llm.bedrock import BedrockService
+from llm.bedrock import BedrockEmbeddingsService, BedrockService
 from llm.gemini import GeminiService
 from utils.llm import transform_recipe_data
 from utils.websocket_client import send_task_completed_sync, send_task_failed_sync, send_task_progress_sync, send_task_started_sync
@@ -86,6 +86,7 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         print("Step 1: レシピ生成開始")
         gemini_service = GeminiService()
         bedrock_service = BedrockService()
+        bedrock_embeddings_service = BedrockEmbeddingsService()
         result = gemini_service.generate_content(url)
 
         # Step 2: レシピ生成完了
@@ -124,7 +125,7 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         recipe_name = bedrock_service.generate_recipe_name(result)
         data = {
             "content": "レシピ名を生成中...",
-            "progress": 90,
+            "progress": 80,
             "recipe_name": recipe_name,
             "type": 5
         }
@@ -135,7 +136,7 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         keywords = bedrock_service.generate_keywords(result)
         data = {
             "content": "レシピのキーワードを生成中...",
-            "progress": 95,
+            "progress": 90,
             "keywords": keywords,
             "type": 6
         }
@@ -143,6 +144,18 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         send_task_progress_sync(ws_url, session_id, data)
 
         transform_result = transform_recipe_data(result, url, user_id)
+
+        # Step 7: レシピデータをembedding用に変換
+        print("Step 7: レシピデータをembedding用に変換")
+        embedding_prompt = bedrock_embeddings_service.get_prompt(
+            recipe_name=recipe_name,
+            ingredients=transform_result.get('ingredients', []),
+            processes=transform_result.get('processes', []),
+            genrue=genrue,
+            keyword=keywords
+        )
+        print(f"Embedding Prompt: {embedding_prompt}")
+        embedding = bedrock_embeddings_service.embed_text(embedding_prompt)
         
         
         # WebSocket: タスク完了通知
@@ -152,6 +165,7 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
             "genrue": genrue.get('genre', ''),
             "keywords": keywords.get('keywords', ''),
             "recipe_name": recipe_name.get('recipes', {}).get('recipe_name', 'AIが生成したレシピ'),
+            "embedding": embedding,
             "progress": 99,
         }
         send_task_completed_sync(ws_url, session_id, data)
