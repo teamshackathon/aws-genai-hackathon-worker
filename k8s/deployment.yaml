@@ -68,8 +68,8 @@ spec:
             memory: "256Mi"
             cpu: "250m"
           limits:
-            memory: "512Mi"
-            cpu: "500m"
+            memory: "1024Mi"
+            cpu: "1000m"
 ---
 # Celery Beat Deployment
 apiVersion: apps/v1
