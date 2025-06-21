@@ -2,9 +2,10 @@
 Redis の task:recipe_gen_* キーを監視してシンプルにprintする処理
 WebSocket通信でリアルタイム進捗を送信
 """
+import json
 import logging
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import redis
 
@@ -72,13 +73,16 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
         
         ws_sent = send_task_started_sync(ws_url, session_id, task_start_data)
         print(f"WebSocket task started notification sent: {ws_sent}")
-        
-        # メタデータがある場合は表示
+          # メタデータがある場合は表示
+        recipe_params = None
         if metadata:
+            recipe_params = metadata.get('recipe_params', None)
+
             print(f"Metadata: {metadata}")
             print(f"Priority: {metadata.get('priority', 'N/A')}")
             print(f"Created at: {metadata.get('created_at', 'N/A')}")
             print(f"Status: {metadata.get('status', 'N/A')}")
+            print(f"recipe_params: {recipe_params}")
         
         # ここでレシピ生成の実処理をシミュレート（段階的に進捗を送信）
         
@@ -97,12 +101,20 @@ def process_recipe_generation_task(self, session_id: str, url: str, user_id: int
             "type": 2,  # タスク進捗
         }
         send_task_progress_sync(ws_url, session_id, data)
+          # Step 3: カスタム設定を適用        
+        if recipe_params:
+            print("Step 3: カスタム設定を適用")
+            print(f"Recipe params received: {recipe_params}")
+            # recipe_paramsが既に辞書形式なので、そのまま渡す
+            result = bedrock_service.rewrite_recipe(result, recipe_params)
+        else:
+            print("Step 3: カスタム設定はありません。デフォルトのレシピを使用します。")
 
-        # Step 3: 親しみやすい表現に変換
-        print("Step 3: 親しみやすい表現に変換")
-        result = bedrock_service.rewrite_recipe(result)
+        
+
+
         data = {
-            "content": "レシピ情報を親しみやすい表現に変換中...",
+            "content": "カスタム設定を適用中...",
             "progress": 50,
             "type": 3
         }

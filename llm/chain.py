@@ -240,17 +240,59 @@ class RecipeRewriteChain(BaseChain):
         ):
         self.chat_llm = chat_llm
         self.prompt = PromptTemplate(
-            template='''あなたは料理レシピを、親しみやすく温かみのある表現に書き換えるとても優秀なAIです。
+            template='''あなたは料理レシピを、ユーザーの好みに合わせて編集する優秀なAIです。
 
-以下のJSONには、ある料理のレシピ（名前、手順、材料）が構造化されて含まれています。このレシピを愛着の持てる表現にリライトしてください。
+以下のJSONには、ある料理のレシピ（名前、手順、材料）が構造化されて含まれています。
 
 入力JSON：
 """
 {recipe_json}
 """
+レシピについて、一般的な料理のレシピと比較して、抜け漏れや不自然な点がないかも確認してください。
+焼いたり煮たりする手順がある場合は、火加減や時間の目安が抜けていないか、抜けている場合は一般的なレシピから類推してください。
 
-ただし、**出力のスキーマ構造（項目名など）は変更せず、内容だけをやさしく・親しみやすく書き直す**ようにしてください。  
-料理の意味が変わるような大幅な改変や創作は行わないでください。
+このレシピを下記のユーザーの好みや条件に合うように書き換えてください。
+レシピの時間を大きく短縮する時は、調理方法や材料を変更しても構いません。
+火が通らなかったり危険な調理になる場合には、好みを無視してでも安全な調理方法に変更してください。
+
+
+人数設定:
+"""
+{people_count}
+"""
+
+調理時間設定:
+"""
+{cooking_time}
+"""
+
+重視する傾向:
+"""
+{preference}
+"""
+
+塩味の強さ:
+"""
+{saltiness}
+"""
+
+甘味の強さ:
+"""
+{sweetness}
+"""
+
+辛味の強さ:
+"""
+{spiciness}
+"""
+
+嫌いな食材:
+"""
+{disliked_ingredients}
+"""
+
+ただし、**出力のスキーマ構造（項目名など）は変更せず、料理とはあまり関係ない好みは取り込まない**ようにしてください。  
+料理の意味が変わるような大幅な改変や創作は行わないでください。特にrecipe_nameは変更しないでください。
 
 - 出力形式は必ず **以下の JSON スキーマ形式のみ** に従ってください。
 - **テキスト出力や説明文、Markdownは絶対に含めないでください。**
@@ -260,29 +302,40 @@ class RecipeRewriteChain(BaseChain):
 {schema}
 """
 ''',
-            input_variables=["recipe_json", "schema"]
+            input_variables=["recipe_json", "people_count", "cooking_time", "preference", "saltiness", "sweetness", "spiciness", "disliked_ingredients", "schema"]
         )
-        self.chain = self.prompt | self.chat_llm | StrOutputParser() | RunnableLambda(self.replaced2json)
-
-    
+        self.chain = self.prompt | self.chat_llm | StrOutputParser() | RunnableLambda(self.replaced2json)    
     def get_prompt(self, inputs, **kwargs):
         """Get the prompt string for the given inputs."""
 
         # Create formatted input
         formatted_input = {
-            "recipe_json": inputs,
+            "recipe_json": inputs["recipe_json"],
+            "people_count": inputs.get("people_count", "レシピ通り"),
+            "cooking_time": inputs.get("cooking_time", "レシピ通り"),
+            "preference": inputs.get("preference", "レシピ通り"),
+            "saltiness": inputs.get("saltiness", "レシピ通り"),
+            "sweetness": inputs.get("sweetness", "レシピ通り"),
+            "spiciness": inputs.get("spiciness", "レシピ通り"),
+            "disliked_ingredients": inputs.get("disliked_ingredients", "特になし"),
             "schema": RECIPE_SCHEMAS,
         }
-        return self.prompt.invoke(formatted_input, **kwargs).to_string()
-    
+        return self.prompt.invoke(formatted_input, **kwargs).to_string()    
     def invoke(self,
-            inputs: str,
+            inputs: dict,
         ):
         """Invoke the chain for recipe rewriting."""
 
         # Prepare the input for the chain
         formatted_input = {
-            "recipe_json": inputs,
+            "recipe_json": inputs["recipe_json"],
+            "people_count": inputs.get("people_count", "レシピ通り"),
+            "cooking_time": inputs.get("cooking_time", "レシピ通り"),
+            "preference": inputs.get("preference", "レシピ通り"),
+            "saltiness": inputs.get("saltiness", "レシピ通り"),
+            "sweetness": inputs.get("sweetness", "レシピ通り"),
+            "spiciness": inputs.get("spiciness", "レシピ通り"),
+            "disliked_ingredients": inputs.get("disliked_ingredients", "特になし"),
             "schema": RECIPE_SCHEMAS,
         }
 
