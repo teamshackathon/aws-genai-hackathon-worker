@@ -85,17 +85,32 @@ class BedrockService:
         # 文字列型に変換
         if isinstance(recipe_json, dict):
             recipe_json = str(recipe_json)
-        return self.recipe_keywords_chain.invoke(recipe_json)
-    
-    def rewrite_recipe(self, recipe_json: dict) -> str:
+        return self.recipe_keywords_chain.invoke(recipe_json)    
+    def rewrite_recipe(self, recipe_json: dict, recipe_params: dict = None) -> dict:
         """レシピJSONをリライト"""
         if not recipe_json:
             raise ValueError("レシピJSONは空ではいけません。")
-        # 文字列型に変換
-        if isinstance(recipe_json, dict):
-            recipe_json = str(recipe_json)
+        
         rewrite_chain = RecipeRewriteChain(chat_llm=self.client)
-        return rewrite_chain.invoke(recipe_json)
+        
+        # 入力データを辞書形式で準備
+        input_data = {
+            "recipe_json": str(recipe_json) if isinstance(recipe_json, dict) else recipe_json
+        }
+        
+        # recipe_paramsがある場合は追加
+        if recipe_params:
+            input_data.update({
+                "people_count": recipe_params.get("peopleCount", "レシピ通り"),
+                "cooking_time": recipe_params.get("cookingTime", "レシピ通り"),
+                "preference": recipe_params.get("preference", "レシピ通り"),
+                "saltiness": recipe_params.get("saltiness", "レシピ通り"),
+                "sweetness": recipe_params.get("sweetness", "レシピ通り"),
+                "spiciness": recipe_params.get("spiciness", "レシピ通り"),
+                "disliked_ingredients": recipe_params.get("dislikedIngredients", "特になし"),
+            })
+        
+        return rewrite_chain.invoke(input_data)
     
 class BedrockEmbeddingsService:
     """Amazon Bedrock埋め込みサービス"""
